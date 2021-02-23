@@ -60,6 +60,9 @@ public class UserClientHandler extends ChannelInboundHandlerAdapter implements C
      */
     @Override
     public synchronized Object call() throws Exception {
+        if(channelHandlerContext == null){
+            return null;
+        }
         channelHandlerContext.writeAndFlush(param);
         wait();
         return result;

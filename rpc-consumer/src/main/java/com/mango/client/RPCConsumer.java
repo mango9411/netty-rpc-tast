@@ -1,11 +1,10 @@
 package com.mango.client;
 
-import com.alibaba.fastjson.JSON;
-import com.mango.decoder.RpcDecoder;
 import com.mango.encoder.RpcEncoder;
 import com.mango.handler.UserClientHandler;
 import com.mango.request.RpcRequest;
 import com.mango.serializer.JSONSerializer;
+import com.mango.zk.ZookeeperUtil;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -18,6 +17,7 @@ import io.netty.handler.codec.string.StringDecoder;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -46,29 +46,29 @@ public class RPCConsumer {
 
         NioEventLoopGroup group = new NioEventLoopGroup();
 
-        Bootstrap bootstrap = new Bootstrap().group(group);
+        Bootstrap bootstrap = ZookeeperUtil.getBootstrap().group(group);
         //设置通道为NIO
         bootstrap.channel(NioSocketChannel.class)
                 //设置请求协议
                 .option(ChannelOption.TCP_NODELAY, true)
                 //监听channel 并初始化
                 .handler(new ChannelInitializer<SocketChannel>() {
-
                     @Override
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
-                        ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast(new RpcEncoder(RpcRequest.class, new JSONSerializer()));
-                        pipeline.addLast(new StringDecoder());
-                        pipeline.addLast(userClientHandler);
+//                        ChannelPipeline pipeline = socketChannel.pipeline();
+//                        pipeline.addLast(new RpcEncoder(RpcRequest.class, new JSONSerializer()));
+//                        pipeline.addLast(new StringDecoder());
+//                        pipeline.addLast(userClientHandler);
                     }
                 });
-        bootstrap.connect("127.0.0.1", 8999).sync();
+        List<String> noteChildren = ZookeeperUtil.getNoteChildren();
+        ZookeeperUtil.connectServer(bootstrap, noteChildren);
     }
 
     /**
      * 使用JDK动态代理创建对象
      *
-     * @param serviceClass  接口类型， 根据那个接口生成字类代理对象
+     * @param serviceClass 接口类型， 根据那个接口生成字类代理对象
      * @return
      */
     public static Object createProxy(Class<?> serviceClass) {
