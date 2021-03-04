@@ -39,6 +39,8 @@ public class RpcRequest implements Serializable {
 
     private Object[] parameters;
 
+    public RpcRequest(){}
+
     public RpcRequest(String requestId, String className, String methodName, Class<?>[] parameterTypes, Object[] parameters) {
         this.requestId = requestId;
         this.className = className;

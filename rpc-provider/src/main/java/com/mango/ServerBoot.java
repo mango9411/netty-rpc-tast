@@ -1,6 +1,5 @@
 package com.mango;
 
-import com.mango.service.UserServiceImpl;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -12,8 +11,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class ServerBoot {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
+        ConfigKeeper configKeeper = ConfigKeeper.getInstance();
+        configKeeper.setPort(8999);
+        configKeeper.setZkAddr("127.0.0.1:2181");
+        configKeeper.setProviderSide(true);
         SpringApplication.run(ServerBoot.class, args);
-        UserServiceImpl.start("127.0.0.1", 8999);
     }
 }
