@@ -13,6 +13,7 @@ import org.springframework.cglib.reflect.FastClass;
 import org.springframework.cglib.reflect.FastMethod;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Map;
@@ -24,6 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @date 2021/3/4 20:51
  * @description:
  */
+@Component
 public class RpcServerHandler extends SimpleChannelInboundHandler<RpcRequest> implements ApplicationContextAware {
     private static final Map<String, Object> SERVICE_INSTANCE_MAP = new ConcurrentHashMap<>();
 

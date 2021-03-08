@@ -27,6 +27,7 @@ import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -126,20 +127,50 @@ public class RPCConsumer implements NodeChangeListener {
      * @param serviceClass 接口类型， 根据那个接口生成字类代理对象
      * @return
      */
-    public static Object createProxy(Class<?> serviceClass) {
-        return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class[]{serviceClass}, new InvocationHandler() {
-            @Override
-            public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                if (userClientHandler == null) {
-                    initClient();
+    public Object createProxy(Class<?> serviceClass) {
+        //借助JDK动态代理生成代理对象
+        return Proxy.newProxyInstance(Thread.currentThread().getContextClassLoader(), new Class<?>[]{serviceClass}, (proxy, method, args) -> {
+
+            //（1）调用初始化netty客户端的方法
+            String serviceClassName = serviceClass.getName();
+
+            // 封装request对象
+            RpcRequest request = new RpcRequest();
+            String requestId = UUID.randomUUID().toString();
+
+            String className = method.getDeclaringClass().getName();
+            String methodName = method.getName();
+
+            Class<?>[] parameterTypes = method.getParameterTypes();
+
+            request.setRequestId(requestId);
+            request.setClassName(className);
+            request.setMethodName(methodName);
+            request.setParameterTypes(parameterTypes);
+            request.setParameters(args);
+
+            // 打印request
+            System.out.println("请求内容: " + request);
+
+            // 去服务端请求数据
+            RpcClient rpcClient = loadBalance.route(CLIENT_POOL, serviceClassName);
+            if (null == rpcClient) {
+                return null;
+            }
+            try {
+                return rpcClient.send(request);
+            } catch (Exception e) {
+                if (e.getClass().getName().equals("java.nio.channels.ClosedChannelException")) {
+                    System.out.println("发送发生异常, 稍后重试:" + e.getMessage());
+                    e.printStackTrace();
+                    Thread.sleep(3000);
+                    RpcClient otherRpcClient = loadBalance.route(CLIENT_POOL, serviceClassName);
+                    if (null == otherRpcClient) {
+                        return null;
+                    }
+                    return otherRpcClient.send(request);
                 }
-                RpcRequest rpcRequest = new RpcRequest("123", method.getDeclaringClass().getName(),
-                        method.getName(), method.getParameterTypes(), args);
-                userClientHandler.setParam(rpcRequest);
-
-                Object result = executorService.submit(userClientHandler).get();
-
-                return result;
+                throw e;
             }
         });
     }

@@ -25,7 +25,7 @@ public class ProviderLoader {
     private static List<String> providerClassList = new ArrayList<>();
 
     static {
-        loadProviderInstance("com.lagou.edu");
+        loadProviderInstance("com.mango");
     }
 
     /**

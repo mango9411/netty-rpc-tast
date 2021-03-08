@@ -1,5 +1,6 @@
 package com.mango.service;
 
+import com.mango.annotations.RpcService;
 import com.mango.decoder.RpcDecoder;
 import com.mango.handler.UserServiceHandler;
 import com.mango.request.RpcRequest;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
  * @description:
  */
 @Service
+@RpcService
 public class UserServiceImpl implements UserService {
 
     @Override
